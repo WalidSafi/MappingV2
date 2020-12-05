@@ -3,6 +3,7 @@ package com.example.mappingtest;
 import androidx.fragment.app.FragmentActivity;
 
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.View;
 
 import java.net.*;
@@ -17,13 +18,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
 
     // Arraylists to hold information (We can change some of these to an SQLitedatabase if needed
-    // The serverResponse can be saved to a database, this will include names list aswell
+    // The serverResponse can be saved to an database , this will include names list aswell
     ArrayList<LatLng> markerLocations = new ArrayList<LatLng>();
     ArrayList<String> variables = new ArrayList<String>();
     ArrayList<String> names = new ArrayList<String>();
@@ -35,9 +37,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_maps);
 
         // Clients variables to send to the sever, Changed this when testing with different emulators for testing
-        variables.add("44.146334");
-        variables.add("-72.541");
-        variables.add("Location One");
+        // Basically implement getting the devices location here, probably using the API if possible, or another method
+        // Using the EditText view we can get the name (Time stamp we can add on server side only if needed)
+        variables.add("42.116334");
+        variables.add("-73.541");
+        variables.add("Safaga");
+
+        Thread updateThread = new Thread(new periodicUpdates());
+        updateThread.start();
 
     }
 
@@ -53,6 +60,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Loops through the server response list and creates a marker object
         for (int i = 0; i < serverResponse.size(); i = i + 3) {
 
+
            latHolder = serverResponse.get(i);
            longHolder = serverResponse.get(i+1);
            names.add(serverResponse.get(i+2));
@@ -63,10 +71,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             markerLocations.add(marker);
         }
 
-        //System.out.println(names);
-
         // Loops though the marker objects array and creates a marker
         // names list matches the coordinates since they were added at the same indexes of both arrays
+        mMap.clear();
         for (int i=0; i<markerLocations.size(); i++) {
             // Adds marker
             mMap.addMarker(new MarkerOptions().position(markerLocations.get(i)).title(names.get(i)));
@@ -82,17 +89,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void refresh(View v) {
-
         // Calls the onMapReady callback to display the markers
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
 
+
     public void buttonTest(View v) {
-        // A thread to make a connection with the server and the information needed
-        // We can call this function periodically without a button needed
-        Thread conThread = new Thread(new connServerThread());
-        conThread.start();
+        variables.set(0,"45.716334");
+        variables.set(1,"-72.541");
     }
 
     // The thread for getting input,
@@ -120,6 +125,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Save the list to the global variable, and the device is ready to press refresh to get locations of the other clients
                 serverResponse = (ArrayList<String>) list;
 
+                System.out.println(serverResponse);
+
             } catch (ClassNotFoundException e){
 
             }
@@ -128,5 +135,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 e.printStackTrace();
             }
         }
+    }
+
+    class periodicUpdates implements Runnable
+    {
+
+        @Override
+        public void run() {
+            while(true){
+
+                try {
+                    Thread conThread = new Thread(new connServerThread());
+                    conThread.start();
+                    TimeUnit.SECONDS.sleep(10);
+                    System.out.println("Slept for 10 seconds");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                //testingprint();
+            }
+        }
+    }
+
+    public void testingprint(){
+        System.out.println("Hello From testing print function");
     }
 }
