@@ -68,7 +68,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Using the EditText view we can get the name (Time stamp we can add on server side only if needed)
         variables.add(lat);
         variables.add(longit);
-        variables.add("Location One");
+        variables.add("");
 
         Thread updateThread = new Thread(new periodicUpdates());
         updateThread.start();
@@ -150,7 +150,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String longit = String.valueOf(location.getLongitude());
         variables.set(0,lat);
         variables.set(1, longit);
+        
+        EditText n = (EditText) findViewById(R.id.editName);
+        String nme = n.getText().toString();
 
+        System.out.println(nme);
+        variables.set(2,nme);
 
     }
 
